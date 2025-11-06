@@ -1,4 +1,4 @@
-import {Blood} from '../models/Blood.model.js'
+import {Blood} from './Blood.model.js'
 
 export const getBlood = async (req, res) => {
 	res.send("hello world")

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import HotelForm from '../components/HotelForm';
-import HotelList from '../components/HotelList';
+import HotelForm from './HotelForm';
+import HotelList from './HotelList';
 import SearchBar from '../components/SearchBar';
 
 const Hotels = () => {

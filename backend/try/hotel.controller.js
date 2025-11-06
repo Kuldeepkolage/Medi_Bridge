@@ -1,5 +1,5 @@
 // controllers/hotel.controller.js
-import { Hotel } from "../models/Hotel.model.js";
+import { Hotel } from "./Hotel.model.js";
 
 // Create a new hotel
 export const createHotel = async (req, res) => {

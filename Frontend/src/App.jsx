@@ -1,144 +1,60 @@
-// src/App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
+import AppointmentBooking from "./pages/AppointmentBooking";
+import ContactPage from "./pages/ContactPage";
+import AwarenessGuide from "./pages/AwarenessGuide";
+import RatingFeedback from "./pages/RatingFeedback";
 import Login from "./pages/Login";
-import PrivateRoute from "./components/PrivateRoute";
 import Register from "./pages/Register";
-import Navbar from "./components/Navbar"; // Import Navbar
-import Hotels from "./pages/Hotels";
-import Blood from "./pages/Blood";
-import BloodForm from "./pages/BloodForm";
-import LibManagement from "./pages/LibManagment";
-import NavbarPart2 from "./components/NavbarPart2";
-import AddProduct from "./pages/AddProduct";
-import ProductsList from "./components/ProductsList";
-import ProductDetail from "./components/ProductDetail";
-import MyProduct from "./components/MyProduct";
-import BuyProductList from "./components/BuyProductList";
-import FileManager from "./pages/FileHandling";
-import { Zeal } from "../../backend/models/Zeal.model";
-import Zealform from "./components/Zealform";
-import ShowEvents from "./components/ShowEvents";
 
-function App() {
+const isAuth = !!localStorage.getItem("token");
+
+function PrivateRoute({ children }) {
+  return isAuth ? children : <Navigate to="/login" replace />;
+}
+
+export default function App() {
   return (
     <Router>
-      <Navbar /> {/* Add Navbar */}
-      <NavbarPart2 /> {/* Add NavbarPart2 */}
+      <header className="clinic-navbar">
+        <div className="clinic-logo">
+          <img src="https://img.icons8.com/doodle/60/tooth--v1.png" alt="tooth" />
+          <span>MediBridge Dental Clinic</span>
+        </div>
+        <nav>
+          <Link to="/" className="nav-link">Home</Link>
+          <Link to="/appointment" className="nav-link">Appointment</Link>
+          <Link to="/contact" className="nav-link">Contact</Link>
+          <Link to="/awareness" className="nav-link">Awareness</Link>
+          <Link to="/ratings" className="nav-link">Reviews</Link>
+          <a href="tel:+919511936441" className="nav-link" style={{background:"#e53935"}}><span role="img" aria-label="Emergency"></span> Emergency</a>
+          {isAuth ? (
+            <button
+              onClick={() => { localStorage.removeItem("token"); window.location = "/login"; }}
+              className="nav-link"
+              style={{background:"#e53935"}}
+            >Logout</button>
+          ) : (
+            <>
+              <Link className="nav-link" to="/login">Login</Link>
+              <Link className="nav-link" to="/register">Register</Link>
+            </>
+          )}
+        </nav>
+      </header>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
-        {/* Protected Routes */}
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Home />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/hotels"
-          element={
-            <PrivateRoute>
-              <Hotels />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/blood"
-          element={
-            <PrivateRoute>
-              <Blood />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/bloodForm"
-          element={
-            <PrivateRoute>
-              <BloodForm />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/libManage"
-          element={
-            <PrivateRoute>
-              <LibManagement />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/add"
-          element={
-            <PrivateRoute>
-              <AddProduct />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/getallproducts"
-          element={
-            <PrivateRoute>
-              <ProductsList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/product/:id"
-          element={
-            <PrivateRoute>
-              <ProductDetail />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/userproducts"
-          element={
-            <PrivateRoute>
-              <MyProduct />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/buyproductlist"
-          element={
-            <PrivateRoute>
-              <BuyProductList />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/FileExample"
-          element={
-            <PrivateRoute>
-              <FileManager />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/zeal"
-          element={
-            <PrivateRoute>
-              <Zealform />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/showEvents"
-          element={
-            <PrivateRoute>
-              <ShowEvents/>
-
-            </PrivateRoute>
-          }
-        />
+        <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+        <Route path="/appointment" element={<PrivateRoute><AppointmentBooking /></PrivateRoute>} />
+        <Route path="/contact" element={<PrivateRoute><ContactPage /></PrivateRoute>} />
+        <Route path="/awareness" element={<PrivateRoute><AwarenessGuide /></PrivateRoute>} />
+        <Route path="/ratings" element={<PrivateRoute><RatingFeedback /></PrivateRoute>} />
       </Routes>
+      <footer className="clinic-footer">
+        &copy; {new Date().getFullYear()} MediBridge Dental Clinic
+      </footer>
     </Router>
   );
 }
-
-export default App;

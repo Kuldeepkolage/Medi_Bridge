@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import BookList from "../components/BookLists";
-import BookSearch from "../components/BookSearch";
-import BookForm from "../components/BookForm";
-import PurchaseList from "../components/PurchaseList";
-import BuyBook from "../components/BookPurchase";
+import BookList from "./BookLists";
+import BookSearch from "./BookSearch";
+import BookForm from "./BookForm";
+import PurchaseList from "./PurchaseList";
+import BuyBook from "./BookPurchase";
 
 const LibManagement = () => {
     const [books, setBooks] = useState([]);

@@ -1,49 +1,18 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
-import authRoutes from "./routes/auth.router.js";
-import hotelRouter from "./routes/hotel.router.js"; // Ensure this path is correct
-import bloodRouter from "./routes/blood.router.js";
-import bookRouter from "./routes/book.router.js";
-import productRouter from "./routes/product.routes.js";
-import fileRoutes from "./routes/file.routes.js"
+import appointmentRoutes from "./routes/appointment.routes.js";
+import contactRoutes from "./routes/contact.routes.js";
+import ratingRoutes from "./routes/rating.routes.js";
+import authRouter from "./routes/auth.routes.js";  // Must match below
 
-import zealRoutes from "./routes/zeal.routes.js"
+const app = express(); // This line MUST BE BEFORE any app.use
 
-dotenv.config();
-
-const app = express();
-
-// Configure CORS to allow requests from your frontend domain (use environment variable for flexibility)
-const corsOptions = {
-    origin: "*",
-};
-
-app.use(cors(corsOptions));
-
-// Middleware setup
+app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/hotels", hotelRouter);
-app.use("/api/blood", bloodRouter);
-app.use("/api/books",bookRouter)
-app.use("/api/product" , productRouter);
-app.use('/api/files', fileRoutes);
-
-app.use('/api/Zeal/',zealRoutes)
-
-
-// Global error handling
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.status || 500).json({
-        message: err.message || "Something broke!",
-        stack: process.env.NODE_ENV === "development" ? err.stack : undefined, // Show stack trace in development
-    });
-});
+app.use("/api/auth", authRouter); // 'authRouter' and NOT 'authRoutes'
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/ratings", ratingRoutes);
 
 export default app;

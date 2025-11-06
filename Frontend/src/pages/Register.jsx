@@ -1,200 +1,102 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const Register = () => {
-    const [formData, setFormData] = useState({
-        fullName: "",
-        email: "",
-        username: "",
-        password: "",
-    });
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+export default function Register() {
+  const [form, setForm] = useState({
+    fullName: "",
+    username: "",
+    email: "",
+    password: ""
+  });
+  const [msg, setMsg] = useState("");
+  const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
+  function handleChange(e) {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  }
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setMsg("Registering...");
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMsg("Registered! Please login.");
+        setTimeout(() => navigate("/login"), 1200);
+      } else setMsg(data.message || "Register failed.");
+    } catch {
+      setMsg("Error registering!");
+    }
+  }
 
-        try {
-            const response = await fetch(
-                "http://localhost:3000/api/auth/register",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(formData),
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || "Registration failed");
-            }
-
-            // Handle successful registration
-            console.log("Registration successful:", data);
-        } catch (err) {
-            setError(err.message || "An error occurred during registration");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Create your account
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Join us today and start your journey
-                    </p>
-                </div>
-
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="rounded-md shadow-sm space-y-4">
-                        <div>
-                            <label
-                                htmlFor="fullName"
-                                className="block text-sm font-medium text-gray-700"
-                            >
-                                Full Name
-                            </label>
-                            <input
-                                id="fullName"
-                                name="fullName"
-                                type="text"
-                                required
-                                className="mt-1 appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                placeholder="John Doe"
-                                value={formData.fullName}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div>
-                            <label
-                                htmlFor="email"
-                                className="block text-sm font-medium text-gray-700"
-                            >
-                                Email address
-                            </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                required
-                                className="mt-1 appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                placeholder="you@example.com"
-                                value={formData.email}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div>
-                            <label
-                                htmlFor="username"
-                                className="block text-sm font-medium text-gray-700"
-                            >
-                                Username
-                            </label>
-                            <input
-                                id="username"
-                                name="username"
-                                type="text"
-                                required
-                                className="mt-1 appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                placeholder="johndoe123"
-                                value={formData.username}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div>
-                            <label
-                                htmlFor="password"
-                                className="block text-sm font-medium text-gray-700"
-                            >
-                                Password
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                required
-                                className="mt-1 appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                placeholder="••••••••"
-                                value={formData.password}
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="text-red-500 text-sm text-center">
-                            {error}
-                        </div>
-                    )}
-
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors duration-200"
-                        >
-                            {loading ? (
-                                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                                    <svg
-                                        className="animate-spin h-5 w-5 text-white"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <circle
-                                            className="opacity-25"
-                                            cx="12"
-                                            cy="12"
-                                            r="10"
-                                            stroke="currentColor"
-                                            strokeWidth="4"
-                                        />
-                                        <path
-                                            className="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        />
-                                    </svg>
-                                </span>
-                            ) : (
-                                "Create Account"
-                            )}
-                        </button>
-                    </div>
-
-                    <div className="text-sm text-center">
-                        <Link
-                            to="/login"
-                            className="font-medium text-blue-600 hover:text-blue-500"
-                        >
-                            Already have an account? Sign in
-                        </Link>
-                    </div>
-                </form>
-            </div>
+  return (
+    <div className="auth-bg">
+      <div className="auth-card">
+        <div className="auth-card-header">
+          <img src="https://img.icons8.com/doodle/64/tooth--v1.png" alt="Logo" />
+          <h2>Register at MediBridge</h2>
         </div>
-    );
-};
-
-export default Register;
+        <form onSubmit={handleSubmit} autoComplete="off" className="auth-form">
+          <label>Full Name</label>
+          <input
+            name="fullName"
+            type="text"
+            placeholder="Your full name"
+            value={form.fullName}
+            required
+            onChange={handleChange}
+          />
+          <label>Username</label>
+          <input
+            name="username"
+            type="text"
+            placeholder="Create a username"
+            value={form.username}
+            required
+            onChange={handleChange}
+          />
+          <label>Email Address</label>
+          <input
+            name="email"
+            type="email"
+            placeholder="Your email"
+            value={form.email}
+            required
+            onChange={handleChange}
+          />
+          <label>Password</label>
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            value={form.password}
+            required
+            onChange={handleChange}
+          />
+          <button type="submit" className="auth-btn">
+            Register
+          </button>
+        </form>
+        {msg && (
+          <div
+            className={`auth-alert ${
+              msg.includes("Registered") ? "auth-success" : "auth-error"
+            }`}
+          >
+            {msg}
+          </div>
+        )}
+        <div className="auth-footer">
+          <span>
+            Already have an account? <a href="/login">Login</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}

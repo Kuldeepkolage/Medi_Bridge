@@ -1,4 +1,4 @@
-import { Book } from "../models/Book.model.js";
+import { Book } from "./Book.model.js";
 import { User } from "../models/User.model.js";
 
 // Get all books

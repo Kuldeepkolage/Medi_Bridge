@@ -1,4 +1,4 @@
-import { Zeal } from "../models/Zeal.model.js";
+import { Zeal } from "./Zeal.model.js";
 
 export const createEvent = async (req, res) => {
 	const { eventName, eventDate, eventTime, location } = req.body;
