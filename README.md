@@ -5,71 +5,45 @@ The platform allows patients to register, book appointments, track appointment s
 
 This project demonstrates a full-stack application with authentication, role-based access control, and real-time appointment management using MongoDB.
 
-Features
+Features : 
 Patient Features
-
 User registration and login
-
 Book dental appointments
-
 View appointment status (Pending / Approved / Completed)
-
 Submit reviews and ratings
-
 Contact clinic via inquiry form
-
 Access awareness guidelines
 
-Admin (Dentist) Features
-
+Admin (Dentist) Features : 
 Secure admin dashboard
-
 View and manage all appointments
-
 Approve or reject appointment requests
-
 Mark treatments as completed
-
 View patient information
-
 Manage patient reviews
-
 Monitor clinic activity
 
-Security
+Security : 
 
 JWT Authentication
-
 Role-based access control (Admin / Patient)
-
 Protected admin routes
-
 Secure API endpoints
 
-Tech Stack
-
+Tech Stack : 
 Frontend
-
 React.js
-
 React Router
-
 Axios
-
 CSS
 
-Backend
-
+Backend : 
 Node.js
-
 Express.js
 
-Database
-
+Database : 
 MongoDB
-
 Mongoose
 
-Authentication
-
+Authentication : 
 JWT (JSON Web Token)
