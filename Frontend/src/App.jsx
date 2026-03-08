@@ -8,6 +8,13 @@ import RatingFeedback from "./pages/RatingFeedback";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
+// Admin Pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminAppointments from "./pages/admin/Appointments";
+import AdminPatients from "./pages/admin/Patients";
+import AdminReviews from "./pages/admin/Reviews";
+import AdminEmergencies from "./pages/admin/Emergencies";
+
 function PrivateRoute({ children }) {
   const isAuth = !!localStorage.getItem("token");
   return isAuth ? children : <Navigate to="/login" replace />;
@@ -31,11 +38,14 @@ export default function App() {
           <Link to="/ratings" className="nav-link">Reviews</Link>
           <a href="tel:+919511936441" className="nav-link" style={{background:"#e53935"}}><span role="img" aria-label="Emergency"></span> Emergency</a>
           {isAuth ? (
-            <button
-              onClick={() => { localStorage.removeItem("token"); window.location = "/login"; }}
-              className="nav-link"
-              style={{background:"#e53935"}}
-            >Logout</button>
+            <>
+              <Link to="/admin/dashboard" className="nav-link" style={{background:"#7c3aed"}}>Admin</Link>
+              <button
+                onClick={() => { localStorage.removeItem("token"); localStorage.removeItem("user"); window.location = "/login"; }}
+                className="nav-link"
+                style={{background:"#e53935"}}
+              >Logout</button>
+            </>
           ) : (
             <>
               <Link className="nav-link" to="/login">Login</Link>
@@ -52,6 +62,13 @@ export default function App() {
         <Route path="/contact" element={<PrivateRoute><ContactPage /></PrivateRoute>} />
         <Route path="/awareness" element={<PrivateRoute><AwarenessGuide /></PrivateRoute>} />
         <Route path="/ratings" element={<PrivateRoute><RatingFeedback /></PrivateRoute>} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+        <Route path="/admin/appointments" element={<PrivateRoute><AdminAppointments /></PrivateRoute>} />
+        <Route path="/admin/patients" element={<PrivateRoute><AdminPatients /></PrivateRoute>} />
+        <Route path="/admin/reviews" element={<PrivateRoute><AdminReviews /></PrivateRoute>} />
+        <Route path="/admin/emergencies" element={<PrivateRoute><AdminEmergencies /></PrivateRoute>} />
       </Routes>
       <footer className="clinic-footer">
         &copy; {new Date().getFullYear()} MediBridge Dental Clinic
