@@ -3,10 +3,11 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema({
-  fullName: { type: String, required: true, trim: true },
-  email:    { type: String, required: true, unique: true, trim: true, lowercase: true },
-  username: { type: String, required: true, unique: true, trim: true },
-  password: { type: String, required: true },
+  fullName:     { type: String, required: true, trim: true },
+  email:        { type: String, required: true, unique: true, trim: true, lowercase: true },
+  username:     { type: String, required: true, unique: true, trim: true },
+  password:     { type: String, required: true },
+  role:         { type: String, enum: ["user", "admin"], default: "user" }, // ✅ NEW
   refreshToken: { type: String }
 }, { timestamps: true });
 

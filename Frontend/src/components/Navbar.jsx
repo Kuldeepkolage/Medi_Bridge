@@ -59,15 +59,25 @@ const Navbar = () => {
                 {label}
               </Link>
             ))}
-            {isAuth && (
-              <Link to="/admin/dashboard"
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                  location.pathname.startsWith("/admin")
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}>
-                Admin
-              </Link>
+{isAuth && (
+              <>
+                <Link to="/my-appointments"
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    location.pathname === "/my-appointments"
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  }`}>
+                  My Appointments
+                </Link>
+                <Link to="/admin/dashboard"
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    location.pathname.startsWith("/admin")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  }`}>
+                  Admin
+                </Link>
+              </>
             )}
           </div>
 
@@ -103,7 +113,7 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="lg:hidden border-t border-gray-100 py-3 space-y-1">
-            {navLinks.map(({ to, label }) => (
+{navLinks.map(({ to, label }) => (
               <Link key={to} to={to} onClick={() => setIsMenuOpen(false)}
                 className={`block px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
                   location.pathname === to
@@ -114,10 +124,20 @@ const Navbar = () => {
               </Link>
             ))}
             {isAuth && (
-              <Link to="/admin/dashboard" onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-2.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50">
-                Admin
-              </Link>
+              <>
+                <Link to="/my-appointments" onClick={() => setIsMenuOpen(false)}
+                  className={`block px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                    location.pathname === "/my-appointments"
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}>
+                  My Appointments
+                </Link>
+                <Link to="/admin/dashboard" onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-2.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50">
+                  Admin
+                </Link>
+              </>
             )}
             <div className="pt-2 border-t border-gray-100 space-y-1">
               {isAuth ? (

@@ -38,9 +38,19 @@ export const loginUser = async (req, res) => {
     const refreshToken = user.generateRefreshToken();
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
+
+    // ✅ Return role in user object so frontend can store it
+    const userData = {
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      username: user.username,
+      role: user.role,  // ✅ role included
+    };
+
     res.status(200).json({
       message: "User logged in successfully",
-      user: { ...user.toObject(), password: undefined, refreshToken: undefined },
+      user: userData,
       accessToken,
     });
   } catch (err) {

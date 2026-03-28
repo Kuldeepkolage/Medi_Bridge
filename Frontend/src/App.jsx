@@ -9,30 +9,64 @@ import RatingFeedback from "./pages/RatingFeedback";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
-// Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminAppointments from "./pages/admin/Appointments";
 import AdminPatients from "./pages/admin/Patients";
 import AdminReviews from "./pages/admin/Reviews";
 import AdminEmergencies from "./pages/admin/Emergencies";
+import MyAppointments from "./pages/MyAppointments";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function getUser() {
+  try { return JSON.parse(localStorage.getItem("user") || "{}"); } catch { return {}; }
+}
+
+// Any logged-in user
 function PrivateRoute({ children }) {
   const isAuth = !!localStorage.getItem("token");
   return isAuth ? children : <Navigate to="/login" replace />;
 }
 
+// ✅ Only admin role
+function AdminRoute({ children }) {
+  const isAuth = !!localStorage.getItem("token");
+  const user = getUser();
+  if (!isAuth) return <Navigate to="/login" replace />;
+  if (user.role !== "admin") return <Navigate to="/not-authorized" replace />;
+  return children;
+}
+
+// ── Not Authorized Page ───────────────────────────────────────────────────────
+function NotAuthorized() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+        <p className="text-gray-500 text-sm mb-6">You don't have permission to view this page.</p>
+        <Link to="/" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors">
+          Go Home
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 // ── Emergency Modal ───────────────────────────────────────────────────────────
 function EmergencyModal({ onClose }) {
   const [form, setForm] = useState({ name: "", phone: "" });
-  const [status, setStatus] = useState(""); // "" | "loading" | "success" | "error"
+  const [status, setStatus] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
     setStatus("loading");
     try {
-      // ✅ FIXED: posts to /api/emergencies (not /api/appointments)
       const res = await fetch(`${API_URL}/api/emergencies`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -58,7 +92,6 @@ function EmergencyModal({ onClose }) {
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl z-10 overflow-hidden">
-        {/* Header */}
         <div className="bg-red-600 px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -72,14 +105,11 @@ function EmergencyModal({ onClose }) {
             </svg>
           </button>
         </div>
-
-        {/* Direct call strip */}
         <a href="tel:+919511936441"
           className="flex items-center justify-between px-5 py-2.5 bg-red-50 border-b border-red-100 hover:bg-red-100 transition-colors">
           <span className="text-red-700 text-xs font-medium">Or call directly</span>
           <span className="text-red-700 font-bold text-sm">+91 9511936441</span>
         </a>
-
         <div className="px-5 py-5">
           {status === "success" ? (
             <div className="text-center py-4">
@@ -130,7 +160,10 @@ function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [showEmergency, setShowEmergency] = useState(false);
   const location = useLocation();
+
   const isAuth = !!localStorage.getItem("token");
+  const user = getUser();
+  const isAdmin = user.role === "admin"; // ✅ only show Admin link for admins
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -149,7 +182,7 @@ function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.reload();
+    window.location.href = "/";
   };
 
   return (
@@ -160,7 +193,6 @@ function Navbar() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
 
-            {/* Logo */}
             <Link to="/" className="flex items-center gap-2 flex-shrink-0">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
@@ -173,31 +205,43 @@ function Navbar() {
               </span>
             </Link>
 
-            {/* Desktop Nav Links */}
-            <div className="hidden lg:flex items-center gap-1">
-              {navLinks.map(({ to, label }) => (
-                <Link key={to} to={to}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                    location.pathname === to
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}>
-                  {label}
-                </Link>
-              ))}
-              {isAuth && (
-                <Link to="/admin/dashboard"
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                    location.pathname.startsWith("/admin")
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}>
-                  Admin
-                </Link>
-              )}
-            </div>
+<div className="hidden lg:flex items-center gap-1">
+  {navLinks.map(({ to, label }) => (
+    <Link key={to} to={to}
+      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+        location.pathname === to
+          ? "text-blue-600 bg-blue-50"
+          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+      }`}>
+      {label}
+    </Link>
+  ))}
 
-            {/* Desktop CTAs */}
+  {/* ✅ Show "My Appointments" for any logged-in user */}
+{isAuth && !isAdmin && (
+  <Link to="/my-appointments"
+    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+      location.pathname === "/my-appointments"
+        ? "text-blue-600 bg-blue-50"
+        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+    }`}>
+    My Appointments
+  </Link>
+)}
+
+  {/* ✅ Only show Admin link if role is admin */}
+  {isAdmin && (
+    <Link to="/admin/dashboard"
+      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+        location.pathname.startsWith("/admin")
+          ? "text-blue-600 bg-blue-50"
+          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+      }`}>
+      Admin
+    </Link>
+  )}
+</div>
+
             <div className="hidden lg:flex items-center gap-2">
               {isAuth ? (
                 <button onClick={handleLogout}
@@ -210,7 +254,6 @@ function Navbar() {
                   Login
                 </Link>
               )}
-              {/* Emergency Button */}
               <button onClick={() => setShowEmergency(true)}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors duration-200 whitespace-nowrap flex items-center gap-1.5">
                 <span className="relative flex h-2 w-2">
@@ -225,7 +268,6 @@ function Navbar() {
               </Link>
             </div>
 
-            {/* Mobile Toggle */}
             <button onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -235,25 +277,37 @@ function Navbar() {
             </button>
           </div>
 
-          {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="lg:hidden border-t border-gray-100 py-3 space-y-1">
-              {navLinks.map(({ to, label }) => (
-                <Link key={to} to={to} onClick={() => setIsMenuOpen(false)}
-                  className={`block px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                    location.pathname === to
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }`}>
-                  {label}
-                </Link>
-              ))}
-              {isAuth && (
-                <Link to="/admin/dashboard" onClick={() => setIsMenuOpen(false)}
-                  className="block px-4 py-2.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50">
-                  Admin
-                </Link>
-              )}
+          
+
+{isMenuOpen && (
+  <div className="lg:hidden border-t border-gray-100 py-3 space-y-1">
+    {navLinks.map(({ to, label }) => (
+      <Link key={to} to={to} onClick={() => setIsMenuOpen(false)}
+        className={`block px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
+          location.pathname === to ? "text-blue-600 bg-blue-50" : "text-gray-600 hover:bg-gray-50"
+        }`}>
+        {label}
+      </Link>
+    ))}
+
+    {/* ✅ Add this */}
+{isAuth && !isAdmin && (
+  <Link to="/my-appointments" onClick={() => setIsMenuOpen(false)}
+    className={`block px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
+      location.pathname === "/my-appointments"
+        ? "text-blue-600 bg-blue-50"
+        : "text-gray-600 hover:bg-gray-50"
+    }`}>
+    My Appointments
+  </Link>
+)}
+
+    {isAdmin && (
+      <Link to="/admin/dashboard" onClick={() => setIsMenuOpen(false)}
+        className="block px-4 py-2.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50">
+        Admin
+      </Link>
+    )}
               <div className="pt-2 border-t border-gray-100 space-y-1">
                 {isAuth ? (
                   <button onClick={handleLogout}
@@ -279,12 +333,21 @@ function Navbar() {
           )}
         </div>
       </nav>
-
-      {/* Emergency Modal */}
       {showEmergency && <EmergencyModal onClose={() => setShowEmergency(false)} />}
     </>
   );
 }
+
+// Add this new route guard near your other guards at the top of App.jsx:
+function UserOnlyRoute({ children }) {
+  const isAuth = !!localStorage.getItem("token");
+  const user = getUser();
+  if (!isAuth) return <Navigate to="/login" replace />;
+  if (user.role === "admin") return <Navigate to="/admin/dashboard" replace />;
+  return children;
+}
+
+
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
@@ -295,16 +358,19 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/not-authorized" element={<NotAuthorized />} />
           <Route path="/" element={<Home />} />
           <Route path="/appointment" element={<AppointmentBooking />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/awareness" element={<AwarenessGuide />} />
           <Route path="/ratings" element={<RatingFeedback />} />
-          <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
-          <Route path="/admin/appointments" element={<PrivateRoute><AdminAppointments /></PrivateRoute>} />
-          <Route path="/admin/patients" element={<PrivateRoute><AdminPatients /></PrivateRoute>} />
-          <Route path="/admin/reviews" element={<PrivateRoute><AdminReviews /></PrivateRoute>} />
-          <Route path="/admin/emergencies" element={<PrivateRoute><AdminEmergencies /></PrivateRoute>} />
+          <Route path="/my-appointments" element={<UserOnlyRoute><MyAppointments /></UserOnlyRoute>} />
+          {/* ✅ All admin routes now use AdminRoute — blocks non-admins */}
+          <Route path="/admin/dashboard"    element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/appointments" element={<AdminRoute><AdminAppointments /></AdminRoute>} />
+          <Route path="/admin/patients"     element={<AdminRoute><AdminPatients /></AdminRoute>} />
+          <Route path="/admin/reviews"      element={<AdminRoute><AdminReviews /></AdminRoute>} />
+          <Route path="/admin/emergencies"  element={<AdminRoute><AdminEmergencies /></AdminRoute>} />
         </Routes>
       </main>
 

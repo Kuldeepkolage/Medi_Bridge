@@ -13,29 +13,33 @@ function AppointmentBooking() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
-    setMsg("");
-    try {
-      const res = await fetch(`${API_URL}/api/appointments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setMsg("Appointment booked successfully!");
-        setForm({ name: "", email: "", phone: "", date: "", time: "", service: "" });
-      } else {
-        setMsg(data.message || "Failed to book appointment. Please try again.");
-      }
-    } catch {
-      setMsg("Server error. Please try again later.");
-    } finally {
-      setLoading(false);
+async function handleSubmit(e) {
+  e.preventDefault();
+  setLoading(true);
+  setMsg("");
+  try {
+    const token = localStorage.getItem("token");
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`; // ← attach token
+
+    const res = await fetch(`${API_URL}/api/appointments`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(form),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      setMsg("Appointment booked successfully!");
+      setForm({ name: "", email: "", phone: "", date: "", time: "", service: "" });
+    } else {
+      setMsg(data.message || "Failed to book appointment.");
     }
+  } catch {
+    setMsg("Server error. Please try again later.");
+  } finally {
+    setLoading(false);
   }
+}
 
   const timeSlots = [
     "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
