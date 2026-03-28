@@ -3,15 +3,14 @@ import AdminLayout from "./AdminLayout";
 import { adminAPI } from "../../services/api";
 
 const statusStyle = {
-  pending:   { bg: "bg-yellow-100 text-yellow-700", label: "Pending" },
-  approved:  { bg: "bg-blue-100 text-blue-700",     label: "Approved" },
-  rejected:  { bg: "bg-red-100 text-red-700",       label: "Rejected" },
-  completed: { bg: "bg-green-100 text-green-700",   label: "Completed" },
+  pending:   { cls: "bg-yellow-100 text-yellow-700", label: "Pending" },
+  approved:  { cls: "bg-blue-100 text-blue-700",     label: "Approved" },
+  rejected:  { cls: "bg-red-100 text-red-700",       label: "Rejected" },
+  completed: { cls: "bg-green-100 text-green-700",   label: "Completed" },
 };
 
-// Helper — always use functional updater to avoid stale closure
 const updateStatus = (setFn, id, status) =>
-  setFn(prev => prev.map(a => a._id === id ? { ...a, status } : a));
+  setFn((prev) => prev.map((a) => (a._id === id ? { ...a, status } : a)));
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
@@ -24,43 +23,32 @@ export default function Appointments() {
     try {
       const res = await adminAPI.getAllAppointments();
       if (res.data.success) setAppointments(res.data.data);
-    } catch (err) { console.error("Error fetching appointments:", err); }
+    } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
 
   const handleApprove = async (id) => {
     setUpdating(id);
-    try {
-      const res = await adminAPI.approveAppointment(id);
-      if (res.data.success) updateStatus(setAppointments, id, "approved");
-    } catch (err) { console.error(err); }
-    finally { setUpdating(null); }
+    try { const r = await adminAPI.approveAppointment(id); if (r.data.success) updateStatus(setAppointments, id, "approved"); }
+    catch (e) { console.error(e); } finally { setUpdating(null); }
   };
 
   const handleReject = async (id) => {
     setUpdating(id);
-    try {
-      const res = await adminAPI.rejectAppointment(id);
-      if (res.data.success) updateStatus(setAppointments, id, "rejected");
-    } catch (err) { console.error(err); }
-    finally { setUpdating(null); }
+    try { const r = await adminAPI.rejectAppointment(id); if (r.data.success) updateStatus(setAppointments, id, "rejected"); }
+    catch (e) { console.error(e); } finally { setUpdating(null); }
   };
 
   const handleComplete = async (id) => {
     setUpdating(id);
-    try {
-      const res = await adminAPI.completeAppointment(id);
-      if (res.data.success) updateStatus(setAppointments, id, "completed");
-    } catch (err) { console.error(err); }
-    finally { setUpdating(null); }
+    try { const r = await adminAPI.completeAppointment(id); if (r.data.success) updateStatus(setAppointments, id, "completed"); }
+    catch (e) { console.error(e); } finally { setUpdating(null); }
   };
 
-  const formatDate = (d) =>
-    new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  const fmt = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
-  // Split: active (pending/approved) on top, done (completed/rejected) below
-  const active = appointments.filter(a => a.status === "pending" || a.status === "approved");
-  const done   = appointments.filter(a => a.status === "completed" || a.status === "rejected");
+  const active = appointments.filter((a) => a.status === "pending" || a.status === "approved");
+  const done   = appointments.filter((a) => a.status === "completed" || a.status === "rejected");
   const ordered = [...active, ...done];
 
   return (
@@ -72,28 +60,26 @@ export default function Appointments() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Patient</th>
-                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Date</th>
-                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Service</th>
-                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Status</th>
-                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Actions</th>
+                  {["Patient", "Date", "Service", "Status", "Actions"].map((h) => (
+                    <th key={h} className="text-left px-5 py-3.5 font-semibold text-gray-600">{h}</th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-50">
                 {ordered.map((apt) => (
                   <tr
                     key={apt._id}
                     className={`transition-colors ${
                       apt.status === "completed" || apt.status === "rejected"
-                        ? "bg-gray-50/60 opacity-70 hover:opacity-100"
+                        ? "opacity-60 hover:opacity-100 bg-gray-50/50"
                         : "hover:bg-gray-50"
                     }`}
                   >
@@ -102,10 +88,10 @@ export default function Appointments() {
                       <p className="text-xs text-gray-400 mt-0.5">{apt.email}</p>
                       <p className="text-xs text-gray-400">{apt.phone}</p>
                     </td>
-                    <td className="px-5 py-4 text-gray-600">{formatDate(apt.date)}</td>
+                    <td className="px-5 py-4 text-gray-600">{fmt(apt.date)}</td>
                     <td className="px-5 py-4 text-gray-600">{apt.service || apt.doctor}</td>
                     <td className="px-5 py-4">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${statusStyle[apt.status]?.bg}`}>
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${statusStyle[apt.status]?.cls}`}>
                         {statusStyle[apt.status]?.label}
                       </span>
                     </td>
@@ -113,37 +99,24 @@ export default function Appointments() {
                       <div className="flex items-center gap-2">
                         {apt.status === "pending" && (
                           <>
-                            <button
-                              onClick={() => handleApprove(apt._id)}
-                              disabled={updating === apt._id}
-                              className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors"
-                            >
+                            <button onClick={() => handleApprove(apt._id)} disabled={updating === apt._id}
+                              className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors">
                               {updating === apt._id ? "..." : "Approve"}
                             </button>
-                            <button
-                              onClick={() => handleReject(apt._id)}
-                              disabled={updating === apt._id}
-                              className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors"
-                            >
+                            <button onClick={() => handleReject(apt._id)} disabled={updating === apt._id}
+                              className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors">
                               Reject
                             </button>
                           </>
                         )}
                         {apt.status === "approved" && (
-                          <button
-                            onClick={() => handleComplete(apt._id)}
-                            disabled={updating === apt._id}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors"
-                          >
+                          <button onClick={() => handleComplete(apt._id)} disabled={updating === apt._id}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors">
                             {updating === apt._id ? "..." : "Mark Done"}
                           </button>
                         )}
-                        {apt.status === "completed" && (
-                          <span className="text-green-600 text-xs font-medium">✓ Completed</span>
-                        )}
-                        {apt.status === "rejected" && (
-                          <span className="text-gray-400 text-xs">—</span>
-                        )}
+                        {apt.status === "completed" && <span className="text-green-600 text-xs font-medium">✓ Done</span>}
+                        {apt.status === "rejected"  && <span className="text-gray-400 text-xs">—</span>}
                       </div>
                     </td>
                   </tr>
