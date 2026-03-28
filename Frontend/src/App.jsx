@@ -32,16 +32,14 @@ function EmergencyModal({ onClose }) {
     e.preventDefault();
     setStatus("loading");
     try {
-      const res = await fetch(`${API_URL}/api/appointments`, {
+      // ✅ FIXED: posts to /api/emergencies (not /api/appointments)
+      const res = await fetch(`${API_URL}/api/emergencies`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: form.name,
+          patientName: form.name,
           phone: form.phone,
-          service: "Emergency",
-          time: "ASAP",
-          date: new Date().toISOString(),
-          doctor: "Dr. Samruddhi",
+          description: "INSTANT EMERGENCY — Patient needs immediate attention.",
         }),
       });
       const data = await res.json();
@@ -215,9 +213,10 @@ function Navbar() {
               {/* Emergency Button */}
               <button onClick={() => setShowEmergency(true)}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors duration-200 whitespace-nowrap flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                </svg>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
                 Emergency
               </button>
               <Link to="/appointment"

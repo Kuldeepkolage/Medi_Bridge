@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import AdminLayout from "./AdminLayout";
 import { adminAPI } from "../../services/api";
 
@@ -11,27 +11,87 @@ const statusStyle = {
 export default function Emergencies() {
   const [emergencies, setEmergencies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [newAlert, setNewAlert] = useState(false);
+  const prevCountRef = useRef(0);
 
-  useEffect(() => { fetchEmergencies(); }, []);
+  useEffect(() => {
+    fetchEmergencies(true);
+    const interval = setInterval(() => fetchEmergencies(false), 30000);
+    return () => clearInterval(interval);
+  }, []);
 
-  // ── Logic unchanged ─────────────────────────────────────────────────────────
-  const fetchEmergencies = async () => {
+  const fetchEmergencies = async (initial = false) => {
     try {
       const res = await adminAPI.getEmergencyRequests();
-      if (res.data.success) setEmergencies(res.data.data);
-    } catch (err) { console.error("Error fetching emergencies:", err); }
-    finally { setLoading(false); }
+      if (res.data.success) {
+        const data = res.data.data;
+        if (!initial && data.length > prevCountRef.current) {
+          setNewAlert(true);
+          setTimeout(() => setNewAlert(false), 6000);
+        }
+        prevCountRef.current = data.length;
+        setEmergencies(data);
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      console.error("Error fetching emergencies:", err);
+    } finally {
+      if (initial) setLoading(false);
+    }
   };
 
   const formatDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   const formatTime = (d) => new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 
+  const pendingCount = emergencies.filter(e => (e.status || "pending") === "pending").length;
+
   return (
     <AdminLayout>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Emergency Requests</h1>
-        <p className="text-gray-500 text-sm mt-1">Handle urgent patient requests</p>
+      {/* Header */}
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl font-bold text-gray-900">Emergency Requests</h1>
+            {pendingCount > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+                </span>
+                {pendingCount} Pending
+              </span>
+            )}
+          </div>
+          <p className="text-gray-500 text-sm mt-1">
+            Handle urgent patient requests
+            {lastUpdated && (
+              <span className="text-gray-400 ml-2">· Updated {formatTime(lastUpdated)}</span>
+            )}
+          </p>
+        </div>
+
+        <button
+          onClick={() => fetchEmergencies(false)}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh
+        </button>
       </div>
+
+      {/* New alert banner */}
+      {newAlert && (
+        <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-semibold">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span>
+          </span>
+          New emergency request received!
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -52,35 +112,56 @@ export default function Emergencies() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {emergencies.map((e) => (
-                  <tr key={e._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-4 font-medium text-gray-900">{e.patientName || e.name}</td>
-                    <td className="px-5 py-4 text-gray-500">{e.phone}</td>
-                    <td className="px-5 py-4 text-gray-500 max-w-xs truncate">{e.description || e.service}</td>
-                    <td className="px-5 py-4">
-                      <p className="text-gray-700">{formatDate(e.createdAt)}</p>
-                      <p className="text-xs text-gray-400">{formatTime(e.createdAt)}</p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${statusStyle[e.status] || "bg-yellow-100 text-yellow-700"}`}>
-                        {e.status || "pending"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <a href={`tel:${e.phone}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        Call Patient
-                      </a>
-                    </td>
-                  </tr>
-                ))}
+                {emergencies.map((e) => {
+                  const isPending = (e.status || "pending") === "pending";
+                  return (
+                    <tr key={e._id} className={`hover:bg-gray-50 transition-colors ${isPending ? "bg-red-50/40" : ""}`}>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          {isPending && (
+                            <span className="relative flex h-2 w-2 flex-shrink-0">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                          )}
+                          <span className="font-medium text-gray-900">{e.patientName || e.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-gray-500">{e.phone}</td>
+                      <td className="px-5 py-4 text-gray-500 max-w-xs truncate">{e.description || e.service}</td>
+                      <td className="px-5 py-4">
+                        <p className="text-gray-700">{formatDate(e.createdAt)}</p>
+                        <p className="text-xs text-gray-400">{formatTime(e.createdAt)}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${statusStyle[e.status] || "bg-yellow-100 text-yellow-700"}`}>
+                          {e.status || "pending"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <a
+                          href={`tel:${e.phone}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          Call Patient
+                        </a>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             {emergencies.length === 0 && (
-              <p className="text-center text-gray-400 text-sm py-12">No emergency requests</p>
+              <div className="text-center py-16">
+                <svg className="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <p className="text-gray-400 text-sm">No emergency requests</p>
+                <p className="text-gray-300 text-xs mt-1">Auto-refreshes every 30 seconds</p>
+              </div>
             )}
           </div>
         </div>

@@ -36,8 +36,8 @@ export const adminAPI = {
   getAllReviews: () => api.get("/admin/reviews"),
   deleteReview: (id) => api.delete(`/admin/reviews/${id}`),
   
-  // Emergencies
-  getEmergencyRequests: () => api.get("/admin/emergencies"),
+  // Emergencies — fixed: was /admin/emergencies (doesn't exist), now /emergencies
+  getEmergencyRequests: () => api.get("/emergencies"),
 };
 
 // Emergency APIs
@@ -48,4 +48,3 @@ export const emergencyAPI = {
 };
 
 export default api;
-
