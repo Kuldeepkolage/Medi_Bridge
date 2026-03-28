@@ -1,3 +1,6 @@
+// ── PATIENTS.JSX ─────────────────────────────────────────────────────────────
+// Save as: src/pages/admin/Patients.jsx
+
 import React, { useEffect, useState } from "react";
 import AdminLayout from "./AdminLayout";
 import { adminAPI } from "../../services/api";
@@ -6,74 +9,69 @@ export default function Patients() {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchPatients();
-  }, []);
+  useEffect(() => { fetchPatients(); }, []);
 
   const fetchPatients = async () => {
     try {
       const res = await adminAPI.getAllPatients();
-      if (res.data.success) {
-        setPatients(res.data.data);
-      }
-    } catch (err) {
-      console.error("Error fetching patients:", err);
-    } finally {
-      setLoading(false);
-    }
+      if (res.data.success) setPatients(res.data.data);
+    } catch (err) { console.error("Error fetching patients:", err); }
+    finally { setLoading(false); }
   };
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  const formatDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
     <AdminLayout>
-      <div className="admin-page">
-        <div className="admin-page-header">
-          <h1>Patients</h1>
-          <p>View all registered patients</p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Patients</h1>
+        <p className="text-gray-500 text-sm mt-1">View all registered patients</p>
+      </div>
 
-        {loading ? (
-          <div className="loading-spinner">Loading...</div>
-        ) : (
-          <div className="table-container">
-            <table className="admin-table">
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
               <thead>
-                <tr>
-                  <th>Patient Name</th>
-                  <th>Email</th>
-                  <th>Registered On</th>
-                  <th>Total Visits</th>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Patient Name</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Email</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Registered On</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Total Visits</th>
                 </tr>
               </thead>
-              <tbody>
-                {patients.map((patient) => (
-                  <tr key={patient._id}>
-                    <td>
-                      <strong>{patient.fullName}</strong>
+              <tbody className="divide-y divide-gray-50">
+                {patients.map((p) => (
+                  <tr key={p._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-semibold text-xs flex-shrink-0">
+                          {p.fullName?.charAt(0)?.toUpperCase()}
+                        </div>
+                        <span className="font-medium text-gray-900">{p.fullName}</span>
+                      </div>
                     </td>
-                    <td>{patient.email}</td>
-                    <td>{formatDate(patient.createdAt)}</td>
-                    <td>
-                      <span className="visit-count">{patient.totalVisits || 0}</span>
+                    <td className="px-5 py-4 text-gray-500">{p.email}</td>
+                    <td className="px-5 py-4 text-gray-500">{formatDate(p.createdAt)}</td>
+                    <td className="px-5 py-4">
+                      <span className="inline-flex px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
+                        {p.totalVisits || 0} visits
+                      </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {patients.length === 0 && (
-              <p className="no-data">No patients found</p>
+              <p className="text-center text-gray-400 text-sm py-12">No patients found</p>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
-

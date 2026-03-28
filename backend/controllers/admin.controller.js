@@ -1,0 +1,155 @@
+import Appointment from "../models/Appointment.model.js";
+import User from "../models/User.model.js";
+import Rating from "../models/Rating.model.js";
+import Emergency from "../models/Emergency.model.js";
+
+// Get all appointments
+export async function getAllAppointments(req, res) {
+  try {
+    const appointments = await Appointment.find()
+      .populate("userId", "fullName email")
+      .sort({ createdAt: -1 });
+    res.json({ success: true, data: appointments });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+// Approve appointment
+export async function approveAppointment(req, res) {
+  try {
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      { status: "approved" },
+      { new: true }
+    );
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+    res.json({ success: true, message: "Appointment approved", data: appointment });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+// Reject appointment
+export async function rejectAppointment(req, res) {
+  try {
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      { status: "rejected" },
+      { new: true }
+    );
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+    res.json({ success: true, message: "Appointment rejected", data: appointment });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+// Complete appointment
+export async function completeAppointment(req, res) {
+  try {
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      { status: "completed" },
+      { new: true }
+    );
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+    res.json({ success: true, message: "Appointment completed", data: appointment });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+// Get dashboard analytics
+export async function getDashboardStats(req, res) {
+  try {
+    const totalPatients = await User.countDocuments();
+    const totalAppointments = await Appointment.countDocuments();
+    const pendingAppointments = await Appointment.countDocuments({ status: "pending" });
+    const approvedAppointments = await Appointment.countDocuments({ status: "approved" });
+    const completedAppointments = await Appointment.countDocuments({ status: "completed" });
+    const rejectedAppointments = await Appointment.countDocuments({ status: "rejected" });
+    
+    res.json({
+      success: true,
+      data: {
+        totalPatients,
+        totalAppointments,
+        pendingAppointments,
+        approvedAppointments,
+        completedAppointments,
+        rejectedAppointments
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+// Get all patients
+export async function getAllPatients(req, res) {
+  try {
+    const patients = await User.find().sort({ createdAt: -1 });
+    
+    // Get total visits for each patient
+    const patientsWithVisits = await Promise.all(
+      patients.map(async (patient) => {
+        const totalVisits = await Appointment.countDocuments({ userId: patient._id });
+        return {
+          _id: patient._id,
+          fullName: patient.fullName,
+          email: patient.email,
+          createdAt: patient.createdAt,
+          totalVisits
+        };
+      })
+    );
+    
+    res.json({ success: true, data: patientsWithVisits });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+// Get all reviews
+export async function getAllReviews(req, res) {
+  try {
+    const reviews = await Rating.find().sort({ createdAt: -1 });
+    res.json({ success: true, data: reviews });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+// Delete review
+export async function deleteReview(req, res) {
+  try {
+    const review = await Rating.findByIdAndDelete(req.params.id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: "Review not found" });
+    }
+    res.json({ success: true, message: "Review deleted" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+// Emergency requests from Emergency collection
+export async function getEmergencyRequests(req, res) {
+  try {
+    const emergencies = await Emergency.find()
+      .populate("userId", "fullName email")
+      .sort({ createdAt: -1 });
+    
+    res.json({ success: true, data: emergencies });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+

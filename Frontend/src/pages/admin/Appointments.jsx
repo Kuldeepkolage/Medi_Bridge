@@ -2,18 +2,12 @@ import React, { useEffect, useState } from "react";
 import AdminLayout from "./AdminLayout";
 import { adminAPI } from "../../services/api";
 
-const statusColors = {
-  pending: { bg: "#fef3c7", text: "#92400e", label: "Pending" },
-  approved: { bg: "#dbeafe", text: "#1e40af", label: "Approved" },
-  rejected: { bg: "#fee2e2", text: "#991b1b", label: "Rejected" },
-  completed: { bg: "#d1fae5", text: "#065f46", label: "Completed" },
-};
-
-const statusMessages = {
-  pending: "Waiting for clinic confirmation",
-  approved: "Appointment Confirmed",
-  rejected: "Appointment Rejected",
-  completed: "Treatment Completed",
+// ── Logic unchanged ───────────────────────────────────────────────────────────
+const statusStyle = {
+  pending:   { bg: "bg-yellow-100 text-yellow-700", label: "Pending" },
+  approved:  { bg: "bg-blue-100 text-blue-700",     label: "Approved" },
+  rejected:  { bg: "bg-red-100 text-red-700",       label: "Rejected" },
+  completed: { bg: "bg-green-100 text-green-700",   label: "Completed" },
 };
 
 export default function Appointments() {
@@ -21,160 +15,109 @@ export default function Appointments() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
+  useEffect(() => { fetchAppointments(); }, []);
 
   const fetchAppointments = async () => {
     try {
       const res = await adminAPI.getAllAppointments();
-      if (res.data.success) {
-        setAppointments(res.data.data);
-      }
-    } catch (err) {
-      console.error("Error fetching appointments:", err);
-    } finally {
-      setLoading(false);
-    }
+      if (res.data.success) setAppointments(res.data.data);
+    } catch (err) { console.error("Error fetching appointments:", err); }
+    finally { setLoading(false); }
   };
 
   const handleApprove = async (id) => {
     setUpdating(id);
     try {
       const res = await adminAPI.approveAppointment(id);
-      if (res.data.success) {
-        setAppointments(appointments.map(apt => 
-          apt._id === id ? { ...apt, status: "approved" } : apt
-        ));
-      }
-    } catch (err) {
-      console.error("Error approving appointment:", err);
-    } finally {
-      setUpdating(null);
-    }
+      if (res.data.success) setAppointments(appointments.map(a => a._id === id ? { ...a, status: "approved" } : a));
+    } catch (err) { console.error(err); }
+    finally { setUpdating(null); }
   };
 
   const handleReject = async (id) => {
     setUpdating(id);
     try {
       const res = await adminAPI.rejectAppointment(id);
-      if (res.data.success) {
-        setAppointments(appointments.map(apt => 
-          apt._id === id ? { ...apt, status: "rejected" } : apt
-        ));
-      }
-    } catch (err) {
-      console.error("Error rejecting appointment:", err);
-    } finally {
-      setUpdating(null);
-    }
+      if (res.data.success) setAppointments(appointments.map(a => a._id === id ? { ...a, status: "rejected" } : a));
+    } catch (err) { console.error(err); }
+    finally { setUpdating(null); }
   };
 
   const handleComplete = async (id) => {
     setUpdating(id);
     try {
       const res = await adminAPI.completeAppointment(id);
-      if (res.data.success) {
-        setAppointments(appointments.map(apt => 
-          apt._id === id ? { ...apt, status: "completed" } : apt
-        ));
-      }
-    } catch (err) {
-      console.error("Error completing appointment:", err);
-    } finally {
-      setUpdating(null);
-    }
+      if (res.data.success) setAppointments(appointments.map(a => a._id === id ? { ...a, status: "completed" } : a));
+    } catch (err) { console.error(err); }
+    finally { setUpdating(null); }
   };
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  const formatDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
     <AdminLayout>
-      <div className="admin-page">
-        <div className="admin-page-header">
-          <h1>Appointments</h1>
-          <p>Manage all patient appointments</p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
+        <p className="text-gray-500 text-sm mt-1">Manage all patient appointments</p>
+      </div>
 
-        {loading ? (
-          <div className="loading-spinner">Loading...</div>
-        ) : (
-          <div className="table-container">
-            <table className="admin-table">
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
               <thead>
-                <tr>
-                  <th>Patient</th>
-                  <th>Date</th>
-                  <th>Time</th>
-                  <th>Service</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Patient</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Date</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Service</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Status</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-50">
                 {appointments.map((apt) => (
-                  <tr key={apt._id}>
-                    <td>
-                      <div className="patient-cell">
-                        <strong>{apt.name}</strong>
-                        <span>{apt.email}</span>
-                        <span>{apt.phone}</span>
-                      </div>
+                  <tr key={apt._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-4">
+                      <p className="font-medium text-gray-900">{apt.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{apt.email}</p>
+                      <p className="text-xs text-gray-400">{apt.phone}</p>
                     </td>
-                    <td>{formatDate(apt.date)}</td>
-                    <td>{apt.time}</td>
-                    <td>{apt.service || apt.doctor}</td>
-                    <td>
-                      <span 
-                        className="status-badge"
-                        style={{ 
-                          background: statusColors[apt.status]?.bg,
-                          color: statusColors[apt.status]?.text
-                        }}
-                      >
-                        {statusColors[apt.status]?.label}
+                    <td className="px-5 py-4 text-gray-600">{formatDate(apt.date)}</td>
+                    <td className="px-5 py-4 text-gray-600">{apt.service || apt.doctor}</td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${statusStyle[apt.status]?.bg}`}>
+                        {statusStyle[apt.status]?.label}
                       </span>
                     </td>
-                    <td>
-                      <div className="action-buttons">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
                         {apt.status === "pending" && (
                           <>
-                            <button
-                              className="btn-approve"
-                              onClick={() => handleApprove(apt._id)}
-                              disabled={updating === apt._id}
-                            >
-                              {updating === apt._id ? "..." : "✓ Approve"}
+                            <button onClick={() => handleApprove(apt._id)} disabled={updating === apt._id}
+                              className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors">
+                              {updating === apt._id ? "..." : "Approve"}
                             </button>
-                            <button
-                              className="btn-reject"
-                              onClick={() => handleReject(apt._id)}
-                              disabled={updating === apt._id}
-                            >
-                              ✗ Reject
+                            <button onClick={() => handleReject(apt._id)} disabled={updating === apt._id}
+                              className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors">
+                              Reject
                             </button>
                           </>
                         )}
                         {apt.status === "approved" && (
-                          <button
-                            className="btn-complete"
-                            onClick={() => handleComplete(apt._id)}
-                            disabled={updating === apt._id}
-                          >
-                            {updating === apt._id ? "..." : "✓ Mark Completed"}
+                          <button onClick={() => handleComplete(apt._id)} disabled={updating === apt._id}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors">
+                            {updating === apt._id ? "..." : "Mark Done"}
                           </button>
                         )}
-                        {apt.status === "rejected" && (
-                          <span className="text-muted">No actions</span>
-                        )}
                         {apt.status === "completed" && (
-                          <span className="text-success">✓ Done</span>
+                          <span className="text-green-600 text-xs font-medium">✓ Completed</span>
+                        )}
+                        {apt.status === "rejected" && (
+                          <span className="text-gray-400 text-xs">—</span>
                         )}
                       </div>
                     </td>
@@ -183,12 +126,11 @@ export default function Appointments() {
               </tbody>
             </table>
             {appointments.length === 0 && (
-              <p className="no-data">No appointments found</p>
+              <p className="text-center text-gray-400 text-sm py-12">No appointments found</p>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
-
