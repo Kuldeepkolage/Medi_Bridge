@@ -6,6 +6,7 @@ import ratingRoutes from "./routes/rating.routes.js";
 import authRouter from "./routes/auth.routes.js";  // Must match below
 import adminRouter from "./routes/admin.routes.js";
 import emergencyRouter from "./routes/emergency.routes.js";
+import activityRoutes from "./routes/activity.routes.js";
 
 const app = express(); // This line MUST BE BEFORE any app.use
 
@@ -18,5 +19,6 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/ratings", ratingRoutes);
 app.use("/api/admin", adminRouter);
 app.use("/api/emergencies", emergencyRouter);
+app.use("/api/activities", activityRoutes);
 
 export default app;

@@ -352,11 +352,18 @@ function PublicLayout({ children }) {
 
 // ─── Root App ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [splashDone, setSplashDone] = useState(false);
+  const [splashDone, setSplashDone] = useState(
+  localStorage.getItem("splashSeen") === "true"
+);
 
   return (
     <>
-      {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
+      {!splashDone && <SplashScreen
+  onDone={() => {
+    localStorage.setItem("splashSeen", "true");
+    setSplashDone(true);
+  }}
+/>}
       <div style={{ opacity: splashDone ? 1 : 0, transition: "opacity 0.3s ease" }}>
         <Router>
           <Routes>

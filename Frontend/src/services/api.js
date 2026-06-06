@@ -50,7 +50,12 @@ export const emergencyAPI = {
 // User Appointment APIs
 export const userAPI = {
   getMyAppointments: () => api.get("/appointments/my"),
-  rescheduleAppointment: (id, data) => api.put(`/appointments/${id}/reschedule`, data),
+
+  rescheduleAppointment: (id, data) =>
+    api.put(`/appointments/${id}/reschedule`, data),
+
+  createAppointment: (data) =>
+    api.post("/appointments", data),
 };
 
 export default api;

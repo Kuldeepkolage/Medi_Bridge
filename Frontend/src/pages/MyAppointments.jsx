@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { userAPI } from "../services/api.js";
 import { useLanguage } from "../context/LanguageContext.jsx";
 
+
 const STATUS_STYLES = {
   pending:   "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800",
   approved:  "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800",
@@ -139,12 +140,40 @@ function RescheduleModal({ appointment, onClose, onSuccess }) {
 export default function MyAppointments() {
   const { t } = useLanguage();
   const [appointments, setAppointments] = useState([]);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
   const [successMsg, setSuccessMsg] = useState("");
+  
+useEffect(() => {
+  fetchAppointments();
+  fetchActivities();
+}, []);
+  
 
-  useEffect(() => { fetchAppointments(); }, []);
+  async function fetchActivities() {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(
+      "http://localhost:5000/api/activities/my",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      setActivities(data.data);
+    }
+  } catch (error) {
+    console.error("Activity fetch error:", error);
+  }
+}
 
   async function fetchAppointments() {
     setLoading(true);
@@ -166,6 +195,7 @@ export default function MyAppointments() {
   function handleSuccess() {
     setSuccessMsg(t("rescheduledSuccess"));
     fetchAppointments();
+    fetchActivities();
     setTimeout(() => setSuccessMsg(""), 4000);
   }
 
@@ -237,7 +267,10 @@ export default function MyAppointments() {
 
         {/* Table */}
         {appointments.length > 0 && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="grid lg:grid-cols-3 gap-6">
+             {/* Appointments Section */}
+               <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+
             <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
               <h2 className="font-semibold text-gray-900 dark:text-white">
                 {t("myAppointmentsTitle")}
@@ -245,10 +278,12 @@ export default function MyAppointments() {
                   {appointments.length}
                 </span>
               </h2>
-              <Link to="/appointment"
-                className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700">
+              <button
+                onClick={() => window.location.href = "/appointment"}
+                className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700"
+              >
                 + {t("bookNow")}
-              </Link>
+              </button>
             </div>
 
             {/* Desktop table */}
@@ -321,9 +356,43 @@ export default function MyAppointments() {
                   </div>
                 </div>
               ))}
-            </div>
+                       </div>
           </div>
-        )}
+
+          {/* Activity History */}
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 h-fit">
+
+            <h2 className="font-semibold text-gray-900 dark:text-white mb-4">
+              Activity History
+            </h2>
+
+            {activities.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No activity yet
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {activities.map((activity) => (
+                  <div
+                    key={activity._id}
+                    className="border-l-2 border-blue-500 pl-3"
+                  >
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {activity.description}
+                    </p>
+
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(activity.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+          </div>
+
+        </div>
+      )}
       </div>
 
       {selected && (

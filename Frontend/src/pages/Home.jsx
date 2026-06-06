@@ -27,12 +27,29 @@ const CalendarIcon = () => (
   </svg>
 );
 
+const TIME_SLOTS = [
+  "09:00 AM",
+  "09:30 AM",
+  "10:00 AM",
+  "10:30 AM",
+  "11:00 AM",
+  "11:30 AM",
+  "12:00 PM",
+  "02:00 PM",
+  "02:30 PM",
+  "03:00 PM",
+  "03:30 PM",
+  "04:00 PM",
+  "04:30 PM",
+  "05:00 PM",
+];
+
 function Home() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const isAuth = !!localStorage.getItem("token");
 
-  const [formData, setFormData] = useState({ name: '', phone: '', date: '', service: '' });
+  const [formData, setFormData] = useState({ name: '', phone: '', date: '', time: "", service: '' });
   const [msg, setMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -89,9 +106,10 @@ function Home() {
       });
       if (res.ok) {
         setMsg(t('bookingSuccess'));
-        setFormData({ name: '', phone: '', date: '', service: '' });
+        setFormData({ name: '', phone: '', date: '', time: '', service: '' });
       } else {
-        setMsg('Booking failed. Please try again or call us.');
+        const errorData = await res.json();
+        setMsg(errorData.message || 'Booking failed.');
       }
     } catch {
       setMsg('Server error. Please call +91 95119 36441');
@@ -285,35 +303,73 @@ function Home() {
                     className={inputClass}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      {t('preferredDate')} *
-                    </label>
-                    <input
-                      name="date" type="date" value={formData.date} onChange={handleInputChange} required
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                      {t('serviceType')} *
-                    </label>
-                    <select
-                      name="service" value={formData.service} onChange={handleInputChange} required
-                      className={`${inputClass} appearance-none`}
-                    >
-                      <option value="">{t('selectService')}</option>
-                      <option value="General Checkup">{t('generalCheckup')}</option>
-                      <option value="Cleaning">{t('cleaning')}</option>
-                      <option value="Dental Implants">{t('implant')}</option>
-                      <option value="Braces">{t('braces')}</option>
-                      <option value="Teeth Whitening">{t('whitening') || 'Teeth Whitening'}</option>
-                      <option value="Root Canal">{t('rootCanal')}</option>
-                      <option value="Emergency Care">{t('emergencyCare') || 'Emergency Care'}</option>
-                    </select>
-                  </div>
-                </div>
+                
+                <div className="grid md:grid-cols-3 gap-4">
+
+  <div>
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+      {t('preferredDate')} *
+    </label>
+    <input
+      name="date"
+      type="date"
+      value={formData.date}
+      onChange={handleInputChange}
+      required
+      className={inputClass}
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+      Time Slot *
+    </label>
+
+    <select
+      name="time"
+      value={formData.time}
+      onChange={handleInputChange}
+      required
+      className={`${inputClass} appearance-none`}
+    >
+      <option value="">Select Time</option>
+
+      {TIME_SLOTS.map((slot) => (
+        <option key={slot} value={slot}>
+          {slot}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div>
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+      {t('serviceType')} *
+    </label>
+
+    <select
+      name="service"
+      value={formData.service}
+      onChange={handleInputChange}
+      required
+      className={`${inputClass} appearance-none`}
+    >
+      <option value="">{t('selectService')}</option>
+      <option value="General Checkup">{t('generalCheckup')}</option>
+      <option value="Cleaning">{t('cleaning')}</option>
+      <option value="Dental Implants">{t('implant')}</option>
+      <option value="Braces">{t('braces')}</option>
+      <option value="Teeth Whitening">
+        {t('whitening') || 'Teeth Whitening'}
+      </option>
+      <option value="Root Canal">{t('rootCanal')}</option>
+      <option value="Emergency Care">
+        {t('emergencyCare') || 'Emergency Care'}
+      </option>
+    </select>
+  </div>
+
+</div>
                 <button
                   type="submit" disabled={submitting}
                   className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg text-sm transition-colors duration-200 flex items-center justify-center gap-2 mt-2"

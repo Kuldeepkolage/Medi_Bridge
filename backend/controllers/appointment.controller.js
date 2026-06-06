@@ -1,6 +1,7 @@
 // controllers/appointment.controller.js
 import Appointment from "../models/Appointment.model.js";
 import { asyncHandler } from "../utils/aysncHandler.js";
+import Activity from "../models/Activity.model.js";
 import jwt from "jsonwebtoken";
 
 export async function createAppointment(req, res) {
@@ -23,6 +24,13 @@ export async function createAppointment(req, res) {
 
     const appt = new Appointment(appointmentData);
     await appt.save();
+    if (appointmentData.userId) {
+  await Activity.create({
+    userId: appointmentData.userId,
+    action: "appointment_booked",
+    description: `Booked ${appt.service} appointment for ${appt.date.toDateString()} at ${appt.time}`,
+  });
+}
     res.status(201).json({ success: true, message: "Appointment booked!", data: appt });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
@@ -81,6 +89,11 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
   appointment.date = new Date(date);
   appointment.time = time;
   await appointment.save();
+  await Activity.create({
+  userId: req.user._id,
+  action: "appointment_rescheduled",
+  description: `Rescheduled appointment to ${date} at ${time}`,
+});
 
   res.json({
     success: true,
