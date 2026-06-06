@@ -110,19 +110,6 @@ MONGO_URI=your_mongodb_connection_string
 
 JWT_SECRET=your_jwt_secret
 ```
-
----
-
-## 📸 Screenshots
-
-Add screenshots here after deployment:
-
-* Home Page
-* Appointment Booking
-* Patient Dashboard
-* Admin Dashboard
-* Reviews Page
-
 ---
 
 ## 🎯 Future Enhancements
