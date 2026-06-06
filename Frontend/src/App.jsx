@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -89,38 +89,41 @@ function SplashScreen({ onDone }) {
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const profileRef = useRef(null);
+
   const isAuth = !!localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = user?.role === "admin";
+
   const { theme, toggleTheme } = useTheme();
-  const { language, changeLanguage, t } = useLanguage();
+  const { language, changeLanguage } = useLanguage();
 
-  // Read role — Admin link only shown to admin role
-  const storedUser = (() => { try { return JSON.parse(localStorage.getItem("user") || "{}"); } catch { return {}; } })();
-  const isAdmin = storedUser?.role === "admin";
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
+  // Close menus on route change
+  useEffect(() => {
+    setMenuOpen(false);
+    setProfileOpen(false);
+  }, [location.pathname]);
+
+  // Scroll shadow
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", fn);
     return () => window.removeEventListener("scroll", fn);
   }, []);
-
-  useEffect(() => setMenuOpen(false), [location.pathname]);
-
-  const links = [
-    { to: "/", label: "Home" },
-    { to: "/appointment", label: "Appointment" },
-    { to: "/contact", label: "Contact" },
-    { to: "/awareness", label: "Awareness" },
-    { to: "/ratings", label: "Reviews" },
-  ];
-
-  const linkCls = (to) =>
-    `px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors duration-150 ${
-      location.pathname === to
-        ? "text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400"
-        : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800"
-    }`;
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -128,154 +131,336 @@ function Navbar() {
     window.location.href = "/";
   };
 
+  // Public nav links — center section
+  const navLinks = [
+    { to: "/", label: "Home" },
+    { to: "/appointment", label: "Appointment" },
+    { to: "/awareness", label: "Awareness" },
+    { to: "/ratings", label: "Reviews" },
+    { to: "/contact", label: "Contact" },
+  ];
+
+  const activeLinkCls =
+    "text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400";
+  const inactiveLinkCls =
+    "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800";
+
+  const linkCls = (to) =>
+    `px-3.5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors duration-150 ${
+      location.pathname === to ? activeLinkCls : inactiveLinkCls
+    }`;
+
+  // User avatar initials
+  const avatarLetter = user?.fullName?.charAt(0)?.toUpperCase() || "U";
+
   const SunIcon = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round"
+        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
     </svg>
   );
   const MoonIcon = () => (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round"
+        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
     </svg>
   );
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 bg-white dark:bg-gray-900 ${scrolled ? "shadow-sm border-b border-gray-100 dark:border-gray-800" : ""}`}>
-      <div className="max-w-7xl mx-auto px-4 lg:px-6">
-        <div className="flex items-center h-16 gap-6">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 bg-white dark:bg-gray-900 ${
+        scrolled ? "shadow-sm border-b border-gray-100 dark:border-gray-800" : ""
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 lg:px-8">
+        <div className="flex items-center h-[64px] gap-8">
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <svg style={{ width: 18, height: 18 }} className="text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          {/* ── LEFT: Logo ── */}
+          <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+              <svg style={{ width: 17, height: 17 }} className="text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
-            <span className="font-bold text-base text-gray-900 dark:text-white whitespace-nowrap">
+            <span className="font-bold text-[15px] text-gray-900 dark:text-white whitespace-nowrap tracking-tight">
               MediBridge <span className="text-blue-600">Dental</span>
             </span>
           </Link>
 
-          {/* Desktop center nav */}
-          <div className="hidden lg:flex items-center gap-0.5 flex-1">
-            {links.map(({ to, label }) => (
-              <Link key={to} to={to} className={linkCls(to)}>{label}</Link>
+          {/* ── CENTER: Nav Links ── */}
+          <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+            {navLinks.map(({ to, label }) => (
+              <Link key={to} to={to} className={linkCls(to)}>
+                {label}
+              </Link>
             ))}
-            {isAuth && (
-              <Link to="/my-appointments" className={linkCls("/my-appointments")}>
-                My Appointments
-              </Link>
-            )}
-            {isAuth && isAdmin && (
-              <Link to="/admin/dashboard" className={linkCls("/admin/dashboard")}>
-                Admin
-              </Link>
-            )}
           </div>
 
-          {/* Desktop right side */}
-          <div className="hidden lg:flex items-center gap-1.5 flex-shrink-0 ml-auto">
+          {/* ── RIGHT: Controls ── */}
+          <div className="hidden lg:flex items-center gap-2 flex-shrink-0 ml-auto">
 
-            {/* Language */}
-            <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden text-xs font-semibold">
-              {["en","hi","mr"].map((lang) => (
-                <button key={lang} onClick={() => changeLanguage(lang)}
-                  className={`px-2 py-1.5 transition-colors ${
+            {/* Language Switcher */}
+            <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden text-[11px] font-bold">
+              {["en", "hi", "mr"].map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => changeLanguage(lang)}
+                  className={`px-2.5 py-1.5 transition-colors ${
                     language === lang
                       ? "bg-blue-600 text-white"
                       : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  }`}>
+                  }`}
+                >
                   {lang === "en" ? "EN" : lang === "hi" ? "हि" : "म"}
                 </button>
               ))}
             </div>
 
-            {/* Theme toggle */}
-            <button onClick={toggleTheme}
-              className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
               {theme === "dark" ? <SunIcon /> : <MoonIcon />}
             </button>
 
-            {/* Login / Logout */}
-            {isAuth ? (
-              <button onClick={handleLogout}
-                className="px-3 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors whitespace-nowrap">
-                Logout
-              </button>
-            ) : (
-              <Link to="/login"
-                className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 transition-colors whitespace-nowrap">
-                Login
-              </Link>
-            )}
-
-            {/* Emergency */}
+            {/* Emergency Button */}
             <EmergencyButton />
 
             {/* Book Now */}
-            <Link to="/appointment"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap">
+            <Link
+              to="/appointment"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap shadow-sm"
+            >
               Book Now
             </Link>
+
+            {/* Profile Avatar / Login */}
+            {isAuth ? (
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => setProfileOpen((p) => !p)}
+                  className={`w-9 h-9 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center ring-2 transition-all duration-150 ${
+                    profileOpen
+                      ? "ring-blue-400 ring-offset-1"
+                      : "ring-transparent hover:ring-blue-300 hover:ring-offset-1"
+                  }`}
+                  aria-label="Open profile menu"
+                >
+                  {avatarLetter}
+                </button>
+
+                {/* Profile Dropdown */}
+                {profileOpen && (
+                  <div className="absolute right-0 top-full mt-2.5 w-60 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50"
+                    style={{ animation: "dropdownIn 0.15s ease-out both" }}>
+                    <style>{`
+                      @keyframes dropdownIn {
+                        from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+                        to   { opacity: 1; transform: translateY(0) scale(1); }
+                      }
+                    `}</style>
+
+                    {/* User Info Header */}
+                    <div className="px-4 py-3.5 border-b border-gray-100 dark:border-gray-800">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
+                          {avatarLetter}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            {user?.fullName || "User"}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {user?.email || ""}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="py-1">
+                      <Link
+                        to="/my-appointments"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        My Appointments
+                      </Link>
+
+                      {isAdmin && (
+                        <Link
+                          to="/admin/dashboard"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                          </svg>
+                          Admin Dashboard
+                        </Link>
+                      )}
+                    </div>
+
+                    {/* Logout */}
+                    <div className="border-t border-gray-100 dark:border-gray-800 py-1">
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors whitespace-nowrap rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
-          {/* Mobile hamburger */}
-          <button onClick={() => setMenuOpen((p) => !p)}
-            className="lg:hidden ml-auto p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+          {/* ── Mobile hamburger ── */}
+          <button
+            onClick={() => setMenuOpen((p) => !p)}
+            className="lg:hidden ml-auto p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Toggle menu"
+          >
             <svg style={{ width: 20, height: 20 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+              <path strokeLinecap="round" strokeLinejoin="round"
+                d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
             </svg>
           </button>
         </div>
 
-        {/* Mobile menu */}
+        {/* ── Mobile Menu ── */}
         {menuOpen && (
-          <div className="lg:hidden border-t border-gray-100 dark:border-gray-800 py-3 space-y-0.5 bg-white dark:bg-gray-900">
-            {links.map(({ to, label }) => (
-              <Link key={to} to={to} className={`block ${linkCls(to)}`}>{label}</Link>
+          <div className="lg:hidden border-t border-gray-100 dark:border-gray-800 pt-3 pb-4 space-y-0.5 bg-white dark:bg-gray-900">
+
+            {/* Public Links */}
+            {navLinks.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  location.pathname === to ? activeLinkCls : inactiveLinkCls
+                }`}
+              >
+                {label}
+              </Link>
             ))}
-            {isAuth && (
-              <Link to="/my-appointments" className={`block ${linkCls("/my-appointments")}`}>
-                My Appointments
-              </Link>
-            )}
-            {isAuth && isAdmin && (
-              <Link to="/admin/dashboard" className={`block ${linkCls("/admin/dashboard")}`}>
-                Admin
-              </Link>
-            )}
-            <div className="pt-2 mt-1 border-t border-gray-100 dark:border-gray-800 space-y-2 px-1">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden text-xs font-semibold flex-1">
-                  {["en","hi","mr"].map((lang) => (
-                    <button key={lang} onClick={() => changeLanguage(lang)}
+
+            {/* Divider + Account Section */}
+            <div className="pt-3 mt-2 border-t border-gray-100 dark:border-gray-800 space-y-1">
+
+              {isAuth ? (
+                <>
+                  {/* User info pill */}
+                  <div className="flex items-center gap-3 px-3 py-2 mb-1">
+                    <div className="w-9 h-9 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
+                      {avatarLetter}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        {user?.fullName || "User"}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {user?.email || ""}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/my-appointments"
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      location.pathname === "/my-appointments" ? activeLinkCls : inactiveLinkCls
+                    }`}
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    My Appointments
+                  </Link>
+
+                  {isAdmin && (
+                    <Link
+                      to="/admin/dashboard"
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                        location.pathname.startsWith("/admin") ? activeLinkCls : inactiveLinkCls
+                      }`}
+                    >
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                      </svg>
+                      Admin Dashboard
+                    </Link>
+                  )}
+
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${inactiveLinkCls}`}
+                >
+                  Login
+                </Link>
+              )}
+
+              {/* Controls row */}
+              <div className="flex items-center gap-2 px-1 pt-2">
+                {/* Language */}
+                <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden text-[11px] font-bold flex-1">
+                  {["en", "hi", "mr"].map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => changeLanguage(lang)}
                       className={`flex-1 py-2 transition-colors ${
                         language === lang
                           ? "bg-blue-600 text-white"
                           : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-                      }`}>
+                      }`}
+                    >
                       {lang === "en" ? "EN" : lang === "hi" ? "हि" : "म"}
                     </button>
                   ))}
                 </div>
-                <button onClick={toggleTheme}
-                  className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+
+                {/* Theme */}
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
                   {theme === "dark" ? <SunIcon /> : <MoonIcon />}
                 </button>
               </div>
-              {isAuth ? (
-                <button onClick={handleLogout}
-                  className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
-                  Logout
-                </button>
-              ) : (
-                <Link to="/login" className="block px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-                  Login
-                </Link>
-              )}
+
+              {/* Emergency */}
               <EmergencyButton className="w-full justify-center" />
-              <Link to="/appointment"
-                className="block w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-center text-sm transition-colors">
+
+              {/* Book Now */}
+              <Link
+                to="/appointment"
+                className="block w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-center text-sm transition-colors shadow-sm"
+              >
                 Book Now
               </Link>
             </div>
@@ -285,6 +470,7 @@ function Navbar() {
     </nav>
   );
 }
+
 // ─── Footer ───────────────────────────────────────────────────────────────────
 function Footer() {
   return (
@@ -326,13 +512,16 @@ function Footer() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Contact Info</h4>
             <div className="space-y-3 text-sm text-gray-400">
               <p>+91 95119 36441</p>
-              <p>info@medibridge.com</p>
+              <p>kolagekuldeep09@gmail.com</p>
               <p>Maulana Azad Road, Vasai West, Maharashtra 401201</p>
             </div>
           </div>
         </div>
         <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
-          © 2024 MediBridge Dental Clinic. All rights reserved.
+        © 2025 MediBridge Dental Clinic. All rights reserved. <br />
+        <span className="text-gray-400 text-sm">
+         Developed by Kuldeep Kolage
+        </span>
         </div>
       </div>
     </footer>
@@ -353,17 +542,19 @@ function PublicLayout({ children }) {
 // ─── Root App ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [splashDone, setSplashDone] = useState(
-  localStorage.getItem("splashSeen") === "true"
-);
+    localStorage.getItem("splashSeen") === "true"
+  );
 
   return (
     <>
-      {!splashDone && <SplashScreen
-  onDone={() => {
-    localStorage.setItem("splashSeen", "true");
-    setSplashDone(true);
-  }}
-/>}
+      {!splashDone && (
+        <SplashScreen
+          onDone={() => {
+            localStorage.setItem("splashSeen", "true");
+            setSplashDone(true);
+          }}
+        />
+      )}
       <div style={{ opacity: splashDone ? 1 : 0, transition: "opacity 0.3s ease" }}>
         <Router>
           <Routes>
@@ -371,7 +562,7 @@ export default function App() {
             <Route path="/login"    element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Admin — PrivateRoute only (no role check needed for now) */}
+            {/* Admin — PrivateRoute only */}
             <Route path="/admin/dashboard"    element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
             <Route path="/admin/appointments" element={<PrivateRoute><AdminAppointments /></PrivateRoute>} />
             <Route path="/admin/patients"     element={<PrivateRoute><AdminPatients /></PrivateRoute>} />
