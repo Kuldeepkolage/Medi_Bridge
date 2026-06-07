@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "https://medibridge-api-8goh.onrender.com/api";
+export const API_URL = "https://medibridge-api-8goh.onrender.com/api";
 
 const api = axios.create({
   baseURL: API_URL,
