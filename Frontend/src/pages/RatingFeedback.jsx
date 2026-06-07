@@ -9,6 +9,7 @@ export default function RatingFeedback() {
   const [ratings, setRatings] = useState([]);
   const [hovered, setHovered] = useState(0);
   const [filter, setFilter] = useState(0);
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetch(`${API_URL}/ratings`)
