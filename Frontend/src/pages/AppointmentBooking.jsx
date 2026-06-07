@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { userAPI } from "../services/api";
+import { Link } from "react-router-dom";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 const UserIcon = () => (
@@ -81,6 +82,98 @@ export default function AppointmentBooking() {
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState(0); // 0=info, 1=service, 2=time
+  const isAuth = !!localStorage.getItem("token");
+  if (!isAuth) {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
+      <div className="max-w-lg w-full">
+
+        <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-xl p-8 text-center">
+
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <span className="text-4xl">🔒</span>
+          </div>
+
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+            Login Required
+          </h1>
+
+          <p className="text-gray-500 dark:text-gray-400 mb-8">
+            Create an account to book appointments, track treatment history,
+            reschedule visits, and manage your dental care online.
+          </p>
+
+          <div className="space-y-3 mb-8">
+
+            <div className="flex items-center gap-3 text-left">
+              <span>✅</span>
+              <span className="text-gray-700 dark:text-gray-300">
+                Book appointments online
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-left">
+              <span>✅</span>
+              <span className="text-gray-700 dark:text-gray-300">
+                View appointment history
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-left">
+              <span>✅</span>
+              <span className="text-gray-700 dark:text-gray-300">
+                Reschedule appointments
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-left">
+              <span>✅</span>
+              <span className="text-gray-700 dark:text-gray-300">
+                Faster future bookings
+              </span>
+            </div>
+
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+
+            <Link
+              to="/login"
+              state={{ from: "/appointment" }}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition"
+            >
+              Login
+            </Link>
+
+            <Link
+              to="/register"
+              state={{ from: "/appointment" }}
+              className="flex-1 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+            >
+              Create Account
+            </Link>
+
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
+
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              Dental emergency?
+            </p>
+
+            <button
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl transition"
+            >
+              Emergency Request
+            </button>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

@@ -2,38 +2,37 @@
 import Appointment from "../models/Appointment.model.js";
 import { asyncHandler } from "../utils/aysncHandler.js";
 import Activity from "../models/Activity.model.js";
-import jwt from "jsonwebtoken";
+// import jwt from "jsonwebtoken";
 
 export async function createAppointment(req, res) {
   try {
-    const appointmentData = { ...req.body };
 
-    // If user is logged in, attach their userId
-    const authHeader = req.header("Authorization");
-    if (authHeader?.startsWith("Bearer ")) {
-      try {
-        const decoded = jwt.verify(
-          authHeader.replace("Bearer ", ""),
-          process.env.JWT_SECRET
-        );
-        if (decoded?.id) appointmentData.userId = decoded.id;
-      } catch {
-        // Guest booking — no userId, that's fine
-      }
-    }
+    const appointmentData = {
+      ...req.body,
+      userId: req.user._id,
+    };
 
     const appt = new Appointment(appointmentData);
+
     await appt.save();
-    if (appointmentData.userId) {
-  await Activity.create({
-    userId: appointmentData.userId,
-    action: "appointment_booked",
-    description: `Booked ${appt.service} appointment for ${appt.date.toDateString()} at ${appt.time}`,
-  });
-}
-    res.status(201).json({ success: true, message: "Appointment booked!", data: appt });
+
+    await Activity.create({
+      userId: req.user._id,
+      action: "appointment_booked",
+      description: `Booked ${appt.service} appointment for ${appt.date.toDateString()} at ${appt.time}`,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Appointment booked!",
+      data: appt,
+    });
+
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
   }
 }
 
