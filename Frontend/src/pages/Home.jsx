@@ -5,6 +5,7 @@ import StatCard from '../components/StatCard';
 import ServiceCard from '../components/ServiceCard';
 import TestimonialCard from '../components/TestimonialCard';
 import WhyFeature from '../components/WhyFeature';
+const API_URL = import.meta.env.VITE_API_URL;
 
 /* ─── Icons ───────────────────────────────────────────────────────────────── */
 const PatientsIcon = () => (
@@ -168,7 +169,7 @@ function Home() {
       const token = localStorage.getItem("token");
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch('http://localhost:5000/api/appointments', {
+      const res = await fetch(`${API_URL}/appointments`, {
         method: 'POST', headers,
         body: JSON.stringify(formData),
       });

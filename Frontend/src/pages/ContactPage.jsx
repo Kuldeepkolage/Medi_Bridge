@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useLanguage } from "../context/LanguageContext.jsx";
+const API_URL = import.meta.env.VITE_API_URL;
 
 function ContactPage() {
   const { t } = useLanguage();
@@ -17,7 +18,7 @@ function ContactPage() {
     setLoading(true);
     setMsg("Sending...");
     try {
-      const res = await fetch("http://localhost:5000/api/contact", {
+      const res = await fetch(`${API_URL}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

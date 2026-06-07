@@ -10,7 +10,7 @@ export default function RatingFeedback() {
   const [filter, setFilter] = useState(0);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/ratings")
+    fetch(`${API_URL}/ratings`)
       .then(res => res.json())
       .then(data => setRatings(data.data));
   }, [msg]);
@@ -20,7 +20,7 @@ export default function RatingFeedback() {
     if (!form.stars) return;
     setMsg("Submitting...");
     try {
-      const res = await fetch("http://localhost:5000/api/ratings", {
+      const res = await fetch(`${API_URL}/ratings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

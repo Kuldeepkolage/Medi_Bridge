@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import AdminLayout from "./AdminLayout";
 import { adminAPI } from "../../services/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "import.meta.env.VITE_API_URL";
 
 const statusConfig = {
   pending:   { cls: "bg-red-50 text-red-600 border border-red-100",     label: "Pending",   topBar: "bg-red-500"   },
