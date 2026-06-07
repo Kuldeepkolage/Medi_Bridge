@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext.jsx";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function RatingFeedback() {
   const { t } = useLanguage();
