@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { userAPI } from "../services/api.js";
 import { useLanguage } from "../context/LanguageContext.jsx";
+import { API_URL } from "../services/api";
 
 
 const STATUS_STYLES = {
@@ -31,6 +32,7 @@ function RescheduleModal({ appointment, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const today = new Date().toISOString().split("T")[0];
+  const API_URL = import.meta.env.VITE_API_URL;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -152,25 +154,15 @@ useEffect(() => {
 }, []);
   
 
-  async function fetchActivities() {
+async function fetchActivities() {
   try {
-    const token = localStorage.getItem("token");
+    const res = await userAPI.getMyActivities();
 
-    const res = await fetch(`${API_URL}/activities/my`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await res.json();
-
-    if (data.success) {
-      setActivities(data.data);
+    if (res.data.success) {
+      setActivities(res.data.data);
     }
   } catch (error) {
-    console.error("Activity fetch error:", error);
+    console.error(error);
   }
 }
 
