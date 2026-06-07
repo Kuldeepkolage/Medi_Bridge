@@ -10,7 +10,12 @@ import activityRoutes from "./routes/activity.routes.js";
 
 const app = express(); // This line MUST BE BEFORE any app.use
 
-app.use(cors());
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 app.use("/api/auth", authRouter); // 'authRouter' and NOT 'authRoutes'
