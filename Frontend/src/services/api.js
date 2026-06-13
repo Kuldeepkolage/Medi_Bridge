@@ -35,6 +35,8 @@ export const adminAPI = {
   // Reviews
   getAllReviews: () => api.get("/admin/reviews"),
   deleteReview: (id) => api.delete(`/admin/reviews/${id}`),
+
+  getAnalytics: () => api.get("/admin/analytics"),
   
   // Emergencies — fixed: was /admin/emergencies (doesn't exist), now /emergencies
   getEmergencyRequests: () => api.get("/emergencies"),

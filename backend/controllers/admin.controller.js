@@ -92,6 +92,127 @@ export async function getDashboardStats(req, res) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ADD THIS to your existing admin.controller.js
+// Place after the existing getDashboardStats function.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GET /api/admin/analytics
+export async function getAnalytics(req, res) {
+  try {
+    const now = new Date();
+
+    // ── 1. Appointment trend — last 6 months ──────────────────────────────
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    const appointmentTrends = await Appointment.aggregate([
+      { $match: { createdAt: { $gte: sixMonthsAgo } } },
+      {
+        $group: {
+          _id: {
+            year:  { $year:  "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      {
+        $project: {
+          _id: 0,
+          month: {
+            $let: {
+              vars: {
+                months: [
+                  "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+                ],
+              },
+              in: { $arrayElemAt: ["$$months", "$_id.month"] },
+            },
+          },
+          count: 1,
+        },
+      },
+    ]);
+
+    // ── 2. Appointment status distribution ────────────────────────────────
+    const statusRaw = await Appointment.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
+    const appointmentStatus = statusRaw.map((s) => ({
+      name:  s._id.charAt(0).toUpperCase() + s._id.slice(1),
+      value: s.count,
+    }));
+
+    // ── 3. Review / rating analytics ─────────────────────────────────────
+    const ratingDist = await Rating.aggregate([
+      { $group: { _id: "$stars", count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Fill in all 5 star slots even if 0
+    const starMap = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    ratingDist.forEach((r) => { starMap[r._id] = r.count; });
+    const reviewAnalytics = Object.entries(starMap).map(([star, count]) => ({
+      name: `${star}★`,
+      count,
+    }));
+
+    const avgRatingAgg = await Rating.aggregate([
+      { $group: { _id: null, avg: { $avg: "$stars" }, total: { $sum: 1 } } },
+    ]);
+    const averageRating = avgRatingAgg[0]?.avg ? +avgRatingAgg[0].avg.toFixed(1) : 0;
+    const totalReviews  = avgRatingAgg[0]?.total ?? 0;
+
+    // ── 4. Emergency trends — last 6 months ──────────────────────────────
+    const emergencyTrends = await Emergency.aggregate([
+      { $match: { createdAt: { $gte: sixMonthsAgo } } },
+      {
+        $group: {
+          _id: {
+            year:  { $year:  "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      {
+        $project: {
+          _id: 0,
+          month: {
+            $let: {
+              vars: {
+                months: [
+                  "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+                ],
+              },
+              in: { $arrayElemAt: ["$$months", "$_id.month"] },
+            },
+          },
+          count: 1,
+        },
+      },
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        appointmentTrends,
+        appointmentStatus,
+        reviewAnalytics,
+        emergencyTrends,
+        averageRating,
+        totalReviews,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
 // Get all patients
 export async function getAllPatients(req, res) {
   try {

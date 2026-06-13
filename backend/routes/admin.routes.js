@@ -8,7 +8,8 @@ import {
   getAllPatients,
   getAllReviews,
   deleteReview,
-  getEmergencyRequests
+  getEmergencyRequests,
+  getAnalytics
 } from "../controllers/admin.controller.js";
 
 const router = Router();
@@ -31,6 +32,8 @@ router.delete("/reviews/:id", deleteReview);
 
 // Emergencies
 router.get("/emergencies", getEmergencyRequests);
+
+router.get("/analytics", getAnalytics);
 
 export default router;
 
