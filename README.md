@@ -190,8 +190,8 @@ Required backend environment variables:
 * Doctor Availability Management
 * Online Payment Integration
 * Medical Report Uploads
-* AI-Powered Appointment Recommendations
 * Advanced Analytics Dashboard
+* Also implementing Devops in it
 
 ---
 
